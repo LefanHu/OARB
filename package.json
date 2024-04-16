@@ -1,13 +1,18 @@
 {
-	"dependencies": {
-		"@oanda/v20": "3.0.25-0",
-		"@stoqey/ib": "^1.3.19",
-		"dotenv": "^16.4.5",
-		"ws": "^8.16.0"
-	},
-	"devDependencies": {
-		"@types/node": "^20.12.3",
-		"@types/ws": "^8.5.10",
-		"typescript": "^5.4.3"
-	}
+    "dependencies": {
+        "@oanda/v20": "3.0.25-0",
+        "@stoqey/ib": "^1.3.19",
+        "dotenv": "^16.4.5",
+        "ws": "^8.16.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.3",
+        "@types/ws": "^8.5.10",
+        "nodemon": "^3.1.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.3"
+    },
+    "scripts": {
+        "start": "pnpm nodemon --exec ts-node main.ts"
+    }
 }

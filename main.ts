@@ -4,7 +4,7 @@ import OandaPortfolioManager from "./oanda_portfolio";
 require('dotenv').config({ path: __dirname+'/.env' });
 
 // Instantiate the portfolio manager with your specific settings
-const portfolioManager = new IBPortfolioManager(0, 4003, "10.0.0.215");
+const portfolioManager = new IBPortfolioManager(0, 4002, "10.0.0.215");
 // const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
 
 // Wait a bit for the connection to establish

@@ -86,7 +86,7 @@ export default class IBPortfolioManager {
       this.contractDetails[reqId] = contract;  // Store the contract details using reqId as the key
 
       // Correctly formatted request for market data:
-      this.ib.reqMktData(reqId, contract, "100,101,104,105", false, false);
+      this.ib.reqMktData(reqId, contract, "1,2,3,4", false, false);
 
       // Output to console for debugging purposes
       console.log(`Market data subscription requested for ${forexPair} with request ID ${reqId}`);

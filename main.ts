@@ -6,17 +6,25 @@ require('dotenv').config({ path: __dirname+'/.env' });
 // Instantiate the portfolio manager with your specific settings
 const portfolioManager = new IBPortfolioManager(0, 4002, "10.0.0.215");
 // const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
+// oandaManager.connect(['EUR_USD']);
+// oandaManager.disconnect();
 
-// Wait a bit for the connection to establish
-setTimeout(() => {
-  // Subscribe to market data for the EUR/USD forex pair
-  portfolioManager.subscribeToMarketData("EURUSD");
-  // oandaManager.connect(['EUR_USD']);
+async function main() {
+  const portfolioManager = new IBPortfolioManager(0, 4002, "127.0.0.1");
+  try {
+    await portfolioManager.connect();
+    console.log("Connection established.");
+    await portfolioManager.subscribeToMarketData("EURUSD");
+    console.log("Subscribed to EURUSD market data.");
 
-  // Let's assume we want to keep the connection open for 30 seconds to receive some data
-  setTimeout(() => {
-    // After 30 seconds, close the connection
-    portfolioManager.close();
-    // oandaManager.disconnect();
-  }, 30000);
-}, 1000);
+    // Optionally, perform more operations or wait for events...
+    setTimeout(async () => {
+      await portfolioManager.disconnect();
+      console.log("Disconnected from the IB API.");
+    }, 30000);  // Stay connected for 30 seconds before disconnecting
+  } catch (error) {
+    console.error("Failed to connect or process data:", error);
+  }
+}
+
+main();

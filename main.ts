@@ -18,6 +18,5 @@ setTimeout(() => {
     // After 30 seconds, close the connection
     portfolioManager.close();
     // oandaManager.disconnect();
-    console.log("Disconnected from IB API.");
   }, 30000);
 }, 1000);

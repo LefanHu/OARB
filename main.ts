@@ -3,14 +3,12 @@ import IBPortfolioManager from "./ib_portfolio";
 import OandaPortfolioManager from "./oanda_portfolio";
 require('dotenv').config({ path: __dirname+'/.env' });
 
-// Instantiate the portfolio manager with your specific settings
-const portfolioManager = new IBPortfolioManager(0, 4002, "10.0.0.215");
 // const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
 // oandaManager.connect(['EUR_USD']);
 // oandaManager.disconnect();
 
 async function main() {
-  const portfolioManager = new IBPortfolioManager(0, 4002, "127.0.0.1");
+  const portfolioManager = new IBPortfolioManager(0, 4001, "10.0.0.215"); 
   try {
     await portfolioManager.connect();
     console.log("Connection established.");

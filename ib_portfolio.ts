@@ -1,4 +1,4 @@
-import { IBApi, EventName, ErrorCode, Contract, SecType, IBApiTickType } from "@stoqey/ib";
+import { IBApi, EventName, ErrorCode, Contract, SecType, IBApiTickType, Forex } from "@stoqey/ib";
 
 export default class IBPortfolioManager {
   private ib: IBApi;
@@ -76,15 +76,15 @@ export default class IBPortfolioManager {
   }
 
   async subscribeToMarketData(forexPair: string): Promise<void> {
-    const contract: Contract = {
+    const contract: Forex = {
       symbol: forexPair.substring(0, 3),
       secType: SecType.CASH,
       currency: forexPair.substring(3),
       exchange: "IDEALPRO",
     };
-    const reqId = new Date().getTime();  // Unique request ID based on the current timestamp
+    const reqId = 1;  // Unique request ID based on the current timestamp
     this.contractDetails[reqId] = contract;
-    this.ib.reqMktData(reqId, contract, "1,2,3,4", false, false);
+    this.ib.reqMktData(reqId, contract, "221,225,106", false, false);
     console.log(`Subscribed to market data for ${forexPair} with request ID ${reqId}`);
   }
 

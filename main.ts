@@ -8,8 +8,9 @@ require('dotenv').config({ path: __dirname+'/.env' });
 // oandaManager.disconnect();
 
 async function main() {
-  const portfolioManager = new IBPortfolioManager(0, 4001, "10.0.0.215"); 
+  const portfolioManager = new IBPortfolioManager(0, 4001, "localhost"); 
   try {
+    console.log("trying to establish connection to IBGateway")
     await portfolioManager.connect();
     console.log("Connection established.");
     await portfolioManager.subscribeToMarketData("EURUSD");

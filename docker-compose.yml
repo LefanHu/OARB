@@ -1,0 +1,19 @@
+name: algo-trader
+services:
+  ib-gateway:
+    restart: always
+    build:
+      context: ./stable
+      tags:
+        - "ghcr.io/gnzsnz/ib-gateway:stable"
+    image: ghcr.io/gnzsnz/ib-gateway:stable
+    env_file: ".env"
+    # volumes:
+    #   - ${PWD}/ibgateway/jts.ini:/home/ibgateway/Jts/jts.ini
+    #   - ${PWD}/ibgateway/config.ini:/home/ibgateway/ibc/config.ini
+    #   - ${PWD}/ibgateway/tws_settings/:${TWS_SETTINGS_PATH:-/home/ibgateway/Jts}
+    #   - ${PWD}/ibgateway/ssh/:/home/ibgateway/.ssh
+    ports:
+      - "127.0.0.1:4001:4003"
+      - "127.0.0.1:4002:4004"
+      - "127.0.0.1:5900:5900"

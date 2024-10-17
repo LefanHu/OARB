@@ -13,6 +13,7 @@
         "typescript": "^5.6.3"
     },
     "scripts": {
-        "start": "pnpm nodemon --exec ts-node main.ts"
+        "start": "pnpm nodemon --exec ts-node main.ts",
+        "build": "tsc -p ."
     }
 }

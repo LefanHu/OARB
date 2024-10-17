@@ -1,9 +1,9 @@
+import { rejects } from "assert";
 import { ClientRequest } from "http";
 import https from "https";
 
 export default class OandaPortfolioManager {
-  private streamingUrl: string =
-    `https://stream-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}/pricing/stream`;
+  private streamingUrl: string = `https://stream-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}/pricing/stream`;
   private apiKey: string;
   private req: ClientRequest | null = null;
 
@@ -11,43 +11,48 @@ export default class OandaPortfolioManager {
     this.apiKey = apiKey;
   }
 
-  public connect(instruments : string[]): void {
+  async connect(instruments: string[]): Promise<void> {
     const queryParams = new URLSearchParams({
-      instruments: instruments.join(',')
+      instruments: instruments.join(","),
     });
-    this.streamingUrl = `${this.streamingUrl}?${queryParams.toString()}`
+    this.streamingUrl = `${this.streamingUrl}?${queryParams.toString()}`;
     const options = {
+      // Usually, you need 'Accept' instead of 'Content-Type' for streaming responses
       headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
-        'Accept': 'application/octet-stream' // Usually, you need 'Accept' instead of 'Content-Type' for streaming responses
-      }
+        Authorization: `Bearer ${this.apiKey}`,
+        Accept: "application/octet-stream",
+      },
     };
 
-    this.req = https.request(this.streamingUrl, options, (res) => {
-      console.log(`STATUS: ${res.statusCode}`);
-      console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+    return new Promise((resolve, reject) => {
+      this.req = https.request(this.streamingUrl, options, (res) => {
+        console.log(`STATUS: ${res.statusCode}`);
+        console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
 
-      res.on('data', (chunk) => {
-        // Process each chunk of data as it comes in
-        console.log(chunk.toString());
+        res.on("data", (chunk) => {
+          // Process each chunk of data as it comes in
+          console.log(chunk.toString());
+        });
+
+        res.on("end", () => {
+          console.log("Stream ended");
+          resolve();
+          this.req = null; // Clear the request object once the stream ends
+        });
       });
 
-      res.on('end', () => {
-        console.log('Stream ended');
-        this.req = null; // Clear the request object once the stream ends
+      this.req.on("error", (error) => {
+        console.error(`Request error: ${error.message}`);
+        this.req = null; // Clear the request object in case of error
+        reject(error);
       });
-    });
 
-    this.req.on('error', (error) => {
-      console.error(`Request error: ${error.message}`);
-      this.req = null; // Clear the request object in case of error
+      // Don't forget to end the request. It's necessary for completing the setup of the request.
+      this.req.end();
     });
-
-    // Don't forget to end the request. It's necessary for completing the setup of the request.
-    this.req.end();
   }
 
-  public disconnect(): void {
+  async disconnect(): Promise<void> {
     // If there's an active request, abort it to disconnect.
     if (this.req) {
       this.req.destroy();

@@ -1,26 +1,28 @@
-import { Contract } from "@stoqey/ib";
 import IBPortfolioManager from "./ib_portfolio";
 import OandaPortfolioManager from "./oanda_portfolio";
-require('dotenv').config({ path: __dirname+'/.env' });
-
-// const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
-// oandaManager.connect(['EUR_USD']);
-// oandaManager.disconnect();
+require("dotenv").config({ path: __dirname + "/.env" });
 
 async function main() {
-  const portfolioManager = new IBPortfolioManager(0, 4001, "localhost"); 
+  const ibPortfolioManager = new IBPortfolioManager(0, 4001, "localhost");
   try {
-    console.log("trying to establish connection to IBGateway")
-    await portfolioManager.connect();
+    console.log("trying to establish connection to IBGateway");
+    await ibPortfolioManager.connect();
     console.log("Connection established.");
-    await portfolioManager.subscribeToMarketData("EURUSD");
+    await ibPortfolioManager.subscribeToMarketData("EURUSD");
     console.log("Subscribed to EURUSD market data.");
+
+    console.log("trying to establish connection to OANDA");
+    const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
+    await oandaManager.connect(["EUR_USD"]);
+    console.log("Connection established.");
 
     // Optionally, perform more operations or wait for events...
     setTimeout(async () => {
-      await portfolioManager.disconnect();
+      await ibPortfolioManager.disconnect();
       console.log("Disconnected from the IB API.");
-    }, 30000);  // Stay connected for 30 seconds before disconnecting
+      await oandaManager.disconnect();
+      console.log("Disconnected from the OANDA API.");
+    }, 30000); // Stay connected for 30 seconds before disconnecting
   } catch (error) {
     console.error("Failed to connect or process data:", error);
   }

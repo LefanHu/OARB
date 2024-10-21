@@ -1,9 +1,10 @@
-import IBPortfolioManager from "./ib_portfolio";
-import OandaPortfolioManager from "./oanda_portfolio";
+import IBPortfolioManager from "./portfolios/ib_portfolio";
+import OandaPortfolioManager from "./portfolios/oanda_portfolio";
 require("dotenv").config({ path: __dirname + "/.env" });
 
 async function main() {
   const ibPortfolioManager = new IBPortfolioManager(0, 4001, "localhost");
+  const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
   try {
     console.log("trying to establish connection to IBGateway");
     await ibPortfolioManager.connect();
@@ -11,10 +12,14 @@ async function main() {
     await ibPortfolioManager.subscribeToMarketData("EURUSD");
     console.log("Subscribed to EURUSD market data.");
 
-    console.log("trying to establish connection to OANDA");
-    const oandaManager = new OandaPortfolioManager(process.env.API_KEY!);
-    await oandaManager.connect(["EUR_USD"]);
-    console.log("Connection established.");
+    // console.log("trying to establish connection to OANDA");
+    // await oandaManager.connect(["EUR_USD"]);
+    // console.log("Connection established.");
+
+    const ibObServable = ibPortfolioManager.getMarketDataObservable();
+    ibObServable.subscribe((data) => {
+      console.log("IB Data Received: ", data);
+    });
 
     // Optionally, perform more operations or wait for events...
     setTimeout(async () => {

@@ -1,12 +1,13 @@
-import { rejects } from "assert";
-import { ClientRequest, IncomingMessage } from "http";
+import { ClientRequest } from "http";
 import https from "https";
-import { fromEventPattern } from "rxjs";
+import { filter, Subject } from "rxjs";
+import { OandaPrice } from "../types/oanda";
 
 export default class OandaPortfolioManager {
   private streamingUrl: string = `https://stream-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}/pricing/stream`;
   private apiKey: string;
   private req: ClientRequest | null = null;
+  private priceSubject: Subject<OandaPrice> = new Subject<OandaPrice>();
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -46,7 +47,12 @@ export default class OandaPortfolioManager {
 
         res.on("data", (chunk) => {
           // Process each chunk of data as it comes in
-          console.log(chunk.toString());
+          try {
+            const data: OandaPrice = JSON.parse(chunk.toString());
+            this.priceSubject.next(data);
+          } catch (error) {
+            console.error("Failed to parse chunk:", error);
+          }
         });
 
         res.on("end", () => {
@@ -66,9 +72,13 @@ export default class OandaPortfolioManager {
     });
   }
 
-  // setupObservables(res: IncomingMessage): void {
-  //   const data$ = fromEventPattern<
-  // }
+  get priceObservable() {
+    return this.priceSubject.asObservable().pipe(
+      filter((data: OandaPrice) => {
+        return data.type === "PRICE";
+      })
+    );
+  }
 
   async disconnect(): Promise<void> {
     // If there's an active request, abort it to disconnect.

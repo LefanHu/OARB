@@ -26,6 +26,12 @@ async function main() {
       console.log("IB size Received: ", JSON.stringify(data));
     });
 
+    // oanda observables
+    const oandaPriceObservable = oandaManager.priceObservable;
+    oandaPriceObservable.subscribe((data) => {
+      console.log("OANDA price Received: ", JSON.stringify(data));
+    });
+
     // Optionally, perform more operations or wait for events...
     setTimeout(async () => {
       await ibPortfolioManager.disconnect();

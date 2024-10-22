@@ -199,10 +199,16 @@ export default class IBPortfolioManager {
   }
 
   getMarketDataObservable(): Observable<any> {
+    if (!this.marketDataObservable) {
+      throw new Error("Must connect to IB API before subscribing to data.");
+    }
     return this.marketDataObservable!;
   }
 
   getSizeObservable(): Observable<any> {
+    if (!this.sizeObservable) {
+      throw new Error("Must connect to IB API before subscribing to data.");
+    }
     return this.sizeObservable!;
   }
 }

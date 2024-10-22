@@ -94,55 +94,79 @@ export default class IBPortfolioManager {
       } else if (tickType === IBApiTickType.ASK) {
         this.marketData[symbol].askPrice = price;
       }
-      console.log(
-        `Updated market data for ${symbol}: ${JSON.stringify(
-          this.marketData[symbol]
-        )}`
-      );
+      // console.log(
+      //   `Updated market data for ${symbol}: ${JSON.stringify(
+      //     this.marketData[symbol]
+      //   )}`
+      // );
     });
 
-    // this.ib.on(EventName.tickSize, (reqId, tickType, size) => {
-    //   const contract = this.contractDetails[reqId];
-    //   if (!contract || !contract.symbol) return; // sanity check
+    this.ib.on(EventName.tickSize, (reqId, tickType, size) => {
+      const contract = this.contractDetails[reqId];
+      if (!contract || !contract.symbol) return; // sanity check
 
-    //   const symbol: string = contract.symbol;
-    //   this.marketData[symbol] = this.marketData[symbol] || {};
-    //   if (tickType === IBApiTickType.BID_SIZE) {
-    //     this.marketData[symbol].bidSize = size;
-    //   } else if (tickType === IBApiTickType.ASK_SIZE) {
-    //     this.marketData[symbol].askSize = size;
-    //   }
-    //   // console.log(
-    //   //   `Updated size data for ${symbol}: ${JSON.stringify(
-    //   //     this.marketData[symbol]
-    //   //   )}`
-    //   // );
-    // });
+      const symbol: string = contract.symbol;
+      this.marketData[symbol] = this.marketData[symbol] || {};
+      if (tickType === IBApiTickType.BID_SIZE) {
+        this.marketData[symbol].bidSize = size;
+      } else if (tickType === IBApiTickType.ASK_SIZE) {
+        this.marketData[symbol].askSize = size;
+      }
+      // console.log(
+      //   `Updated size data for ${symbol}: ${JSON.stringify(
+      //     this.marketData[symbol]
+      //   )}`
+      // );
+    });
 
     // create observable
-    // const marketData$ = fromEventPattern<[number, IBApiTickType, number]>(
-    //   (handler) => this.ib.on(EventName.tickPrice, handler),
-    //   (handler) => this.ib.off(EventName.tickPrice, handler)
-    // );
-    // this.marketDataObservable = marketData$.pipe(
-    //   // Filter out invalid contracts
-    //   filter(([reqId, tickType, size]) => {
-    //     const contract = this.contractDetails[reqId];
-    //     return !!(contract && contract.symbol);
-    //   }),
-    //   // Transform the data
-    //   map(([reqId, tickType, size]) => {
-    //     const contract = this.contractDetails[reqId];
-    //     const symbol: string = contract.symbol!;
-    //     this.marketData[symbol] = this.marketData[symbol] || {};
-    //     if (tickType === IBApiTickType.BID_SIZE) {
-    //       this.marketData[symbol].bidSize = size;
-    //     } else if (tickType === IBApiTickType.ASK_SIZE) {
-    //       this.marketData[symbol].askSize = size;
-    //     }
-    //     return { symbol, data: this.marketData[symbol] };
-    //   })
-    // );
+    const priceData$ = fromEventPattern<[number, IBApiTickType, number]>(
+      (handler) => this.ib.on(EventName.tickPrice, handler),
+      (handler) => this.ib.off(EventName.tickPrice, handler)
+    );
+    this.marketDataObservable = priceData$.pipe(
+      // Filter out invalid contracts
+      filter(([reqId, tickType, size]) => {
+        const contract = this.contractDetails[reqId];
+        return !!(contract && contract.symbol);
+      }),
+      // Transform the data
+      map(([reqId, tickType, size]) => {
+        const contract = this.contractDetails[reqId];
+        const symbol: string = contract.symbol!;
+        this.marketData[symbol] = this.marketData[symbol] || {};
+        if (tickType === IBApiTickType.BID_SIZE) {
+          this.marketData[symbol].bidSize = size;
+        } else if (tickType === IBApiTickType.ASK_SIZE) {
+          this.marketData[symbol].askSize = size;
+        }
+        return { symbol, data: this.marketData[symbol] };
+      })
+    );
+
+    const sizeData$ = fromEventPattern<[number, IBApiTickType, number]>(
+      (handler) => this.ib.on(EventName.tickSize, handler),
+      (handler) => this.ib.off(EventName.tickSize, handler)
+    );
+    this.sizeObservable = sizeData$.pipe(
+      // Filter out invalid contracts
+      filter(([reqId, tickType, size]) => {
+        const contract = this.contractDetails[reqId];
+        return !!(contract && contract.symbol);
+      }),
+      // Transform the data
+      map(([reqId, tickType, size]) => {
+        const contract = this.contractDetails[reqId];
+        const symbol: string = contract.symbol!;
+        this.marketData[symbol] = this.marketData[symbol] || {};
+        if (tickType === IBApiTickType.BID_SIZE) {
+          this.marketData[symbol].bidSize = size;
+        } else if (tickType === IBApiTickType.ASK_SIZE) {
+          this.marketData[symbol].askSize = size;
+        }
+        return { symbol, data: this.marketData[symbol] };
+      })
+    );
   }
 
   async subscribeToMarketData(forexPair: string): Promise<void> {

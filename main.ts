@@ -16,9 +16,13 @@ async function main() {
     // await oandaManager.connect(["EUR_USD"]);
     // console.log("Connection established.");
 
-    const ibObServable = ibPortfolioManager.getMarketDataObservable();
-    ibObServable.subscribe((data) => {
-      console.log("IB Data Received: ", data);
+    const ibPriceObservable = ibPortfolioManager.getMarketDataObservable();
+    ibPriceObservable.subscribe((data) => {
+      console.log("IB price Received: ", JSON.stringify(data));
+    });
+    const ibSizeObservable = ibPortfolioManager.getSizeObservable();
+    ibSizeObservable.subscribe((data) => {
+      console.log("IB size Received: ", JSON.stringify(data));
     });
 
     // Optionally, perform more operations or wait for events...

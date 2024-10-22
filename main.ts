@@ -12,10 +12,11 @@ async function main() {
     await ibPortfolioManager.subscribeToMarketData("EURUSD");
     console.log("Subscribed to EURUSD market data.");
 
-    // console.log("trying to establish connection to OANDA");
-    // await oandaManager.connect(["EUR_USD"]);
-    // console.log("Connection established.");
+    console.log("trying to establish connection to OANDA");
+    await oandaManager.connect(["EUR_USD"]);
+    console.log("Connection established.");
 
+    // ib observables
     const ibPriceObservable = ibPortfolioManager.getMarketDataObservable();
     ibPriceObservable.subscribe((data) => {
       console.log("IB price Received: ", JSON.stringify(data));

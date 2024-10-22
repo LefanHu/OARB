@@ -1,6 +1,7 @@
 import { rejects } from "assert";
-import { ClientRequest } from "http";
+import { ClientRequest, IncomingMessage } from "http";
 import https from "https";
+import { fromEventPattern } from "rxjs";
 
 export default class OandaPortfolioManager {
   private streamingUrl: string = `https://stream-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}/pricing/stream`;
@@ -28,6 +29,20 @@ export default class OandaPortfolioManager {
       this.req = https.request(this.streamingUrl, options, (res) => {
         console.log(`STATUS: ${res.statusCode}`);
         console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+        if (res.statusCode === 200) {
+          console.log("Successfully connected to OANDA API.");
+          resolve();
+        } else {
+          console.error(
+            `Failed to connect to stream. Status code: ${res.statusCode}`
+          );
+          reject(
+            new Error(
+              `Failed to connect to stream. Status code: ${res.statusCode}`
+            )
+          );
+          return;
+        }
 
         res.on("data", (chunk) => {
           // Process each chunk of data as it comes in
@@ -36,7 +51,6 @@ export default class OandaPortfolioManager {
 
         res.on("end", () => {
           console.log("Stream ended");
-          resolve();
           this.req = null; // Clear the request object once the stream ends
         });
       });
@@ -51,6 +65,10 @@ export default class OandaPortfolioManager {
       this.req.end();
     });
   }
+
+  // setupObservables(res: IncomingMessage): void {
+  //   const data$ = fromEventPattern<
+  // }
 
   async disconnect(): Promise<void> {
     // If there's an active request, abort it to disconnect.

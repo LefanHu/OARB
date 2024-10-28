@@ -16,6 +16,7 @@ export default class OandaPortfolioManager {
   async connect(instruments: string[]): Promise<void> {
     const queryParams = new URLSearchParams({
       instruments: instruments.join(","),
+      snapshot: "False",
     });
     this.streamingUrl = `${this.streamingUrl}?${queryParams.toString()}`;
     const options = {

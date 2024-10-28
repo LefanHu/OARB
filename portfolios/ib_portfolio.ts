@@ -7,7 +7,7 @@ import {
   IBApiTickType,
   Forex,
 } from "@stoqey/ib";
-import { filter, fromEventPattern, map, Observable } from "rxjs";
+import { filter, fromEventPattern, map, Observable, Subject } from "rxjs";
 
 export default class IBPortfolioManager {
   private ib: IBApi;
@@ -17,8 +17,8 @@ export default class IBPortfolioManager {
     string,
     { bidPrice?: number; bidSize?: number; askPrice?: number; askSize?: number }
   > = {};
-  private marketDataObservable: Observable<any> | null = null;
-  private sizeObservable: Observable<any> | null = null;
+  private priceSubject: Subject<any> = new Subject<any>();
+  private sizeSubject: Subject<any> = new Subject<any>();
 
   constructor(
     private clientId: number = 0,
@@ -94,6 +94,7 @@ export default class IBPortfolioManager {
       } else if (tickType === IBApiTickType.ASK) {
         this.marketData[symbol].askPrice = price;
       }
+      this.priceSubject.next({ symbol, data: this.marketData[symbol] });
       // console.log(
       //   `Updated market data for ${symbol}: ${JSON.stringify(
       //     this.marketData[symbol]
@@ -112,61 +113,13 @@ export default class IBPortfolioManager {
       } else if (tickType === IBApiTickType.ASK_SIZE) {
         this.marketData[symbol].askSize = size;
       }
+      this.sizeSubject.next({ symbol, data: this.marketData[symbol] });
       // console.log(
       //   `Updated size data for ${symbol}: ${JSON.stringify(
       //     this.marketData[symbol]
       //   )}`
       // );
     });
-
-    // create observable
-    const priceData$ = fromEventPattern<[number, IBApiTickType, number]>(
-      (handler) => this.ib.on(EventName.tickPrice, handler),
-      (handler) => this.ib.off(EventName.tickPrice, handler)
-    );
-    this.marketDataObservable = priceData$.pipe(
-      // Filter out invalid contracts
-      filter(([reqId, tickType, size]) => {
-        const contract = this.contractDetails[reqId];
-        return !!(contract && contract.symbol);
-      }),
-      // Transform the data
-      map(([reqId, tickType, size]) => {
-        const contract = this.contractDetails[reqId];
-        const symbol: string = contract.symbol!;
-        this.marketData[symbol] = this.marketData[symbol] || {};
-        if (tickType === IBApiTickType.BID_SIZE) {
-          this.marketData[symbol].bidSize = size;
-        } else if (tickType === IBApiTickType.ASK_SIZE) {
-          this.marketData[symbol].askSize = size;
-        }
-        return { symbol, data: this.marketData[symbol] };
-      })
-    );
-
-    const sizeData$ = fromEventPattern<[number, IBApiTickType, number]>(
-      (handler) => this.ib.on(EventName.tickSize, handler),
-      (handler) => this.ib.off(EventName.tickSize, handler)
-    );
-    this.sizeObservable = sizeData$.pipe(
-      // Filter out invalid contracts
-      filter(([reqId, tickType, size]) => {
-        const contract = this.contractDetails[reqId];
-        return !!(contract && contract.symbol);
-      }),
-      // Transform the data
-      map(([reqId, tickType, size]) => {
-        const contract = this.contractDetails[reqId];
-        const symbol: string = contract.symbol!;
-        this.marketData[symbol] = this.marketData[symbol] || {};
-        if (tickType === IBApiTickType.BID_SIZE) {
-          this.marketData[symbol].bidSize = size;
-        } else if (tickType === IBApiTickType.ASK_SIZE) {
-          this.marketData[symbol].askSize = size;
-        }
-        return { symbol, data: this.marketData[symbol] };
-      })
-    );
   }
 
   async subscribeToMarketData(forexPair: string): Promise<void> {
@@ -198,17 +151,11 @@ export default class IBPortfolioManager {
     this.ib.on(EventName.disconnected, cb);
   }
 
-  getMarketDataObservable(): Observable<any> {
-    if (!this.marketDataObservable) {
-      throw new Error("Must connect to IB API before subscribing to data.");
-    }
-    return this.marketDataObservable!;
+  get priceObservable(): Observable<any> {
+    return this.priceSubject.asObservable();
   }
 
-  getSizeObservable(): Observable<any> {
-    if (!this.sizeObservable) {
-      throw new Error("Must connect to IB API before subscribing to data.");
-    }
-    return this.sizeObservable!;
+  get sizeObservable(): Observable<any> {
+    return this.sizeSubject.asObservable();
   }
 }

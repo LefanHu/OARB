@@ -17,13 +17,9 @@ async function main() {
     console.log("Connection established.");
 
     // ib observables
-    const ibPriceObservable = ibPortfolioManager.getMarketDataObservable();
+    const ibPriceObservable = ibPortfolioManager.priceObservable;
     ibPriceObservable.subscribe((data) => {
       console.log("IB price Received: ", JSON.stringify(data));
-    });
-    const ibSizeObservable = ibPortfolioManager.getSizeObservable();
-    ibSizeObservable.subscribe((data) => {
-      console.log("IB size Received: ", JSON.stringify(data));
     });
 
     // oanda observables

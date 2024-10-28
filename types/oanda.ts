@@ -14,3 +14,11 @@ export interface OandaPrice {
   tradeable: boolean;
   instrument: string;
 }
+
+export interface Order {
+  units: string;
+  instrument: string;
+  timeInForce: string;
+  type: string;
+  positionFill: string;
+}

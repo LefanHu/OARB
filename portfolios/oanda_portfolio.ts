@@ -2,9 +2,11 @@ import { ClientRequest } from "http";
 import https from "https";
 import { filter, Subject } from "rxjs";
 import { OandaPrice } from "../types/oanda";
+import { resolve } from "path";
 
 export default class OandaPortfolioManager {
   private streamingUrl: string = `https://stream-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}/pricing/stream`;
+  private baseUrl: string = `https://api-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}`;
   private apiKey: string;
   private req: ClientRequest | null = null;
   private priceSubject: Subject<OandaPrice> = new Subject<OandaPrice>();
@@ -70,6 +72,69 @@ export default class OandaPortfolioManager {
 
       // Don't forget to end the request. It's necessary for completing the setup of the request.
       this.req.end();
+    });
+  }
+
+  async placeOrder(): Promise<void> {
+    const options = {
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        AcceptDatetimeFormat: "UNIX",
+        AccountID: process.env.ACCOUNT_ID,
+      },
+    };
+
+    const body = JSON.stringify({
+      order: {
+        units: "100",
+        instrument: "EUR_USD",
+        timeInForce: "FOK",
+        type: "MARKET",
+        positionFill: "DEFAULT",
+      },
+    });
+
+    const req = https.request(
+      `${this.baseUrl}/orders`,
+      {
+        method: "POST",
+        ...options,
+      },
+      (res) => {
+        console.log(`STATUS: ${res.statusCode}`);
+        console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+        res.on("data", (chunk) => {
+          console.log(`BODY: ${chunk}`);
+        });
+
+        if (res.statusCode === 201) {
+          console.log("Order placed successfully.");
+          resolve();
+        } else {
+          console.error(
+            `Failed to place order. Status code: ${res.statusCode}`
+          );
+          throw new Error(
+            `Failed to place order. Status code: ${res.statusCode}`
+          );
+        }
+      }
+    );
+  }
+
+  async cancelOrder(): Promise<void> {
+    // TODO: implement
+  }
+
+  buildOrder(from: string, to: string, amount: number, limit: number): string {
+    return JSON.stringify({
+      order: {
+        units: "100",
+        instrument: "EUR_USD",
+        timeInForce: "FOK",
+        type: "MARKET",
+        positionFill: "DEFAULT",
+      },
     });
   }
 

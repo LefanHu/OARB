@@ -2,7 +2,7 @@ import { ClientRequest } from "http";
 import https from "https";
 import { filter, Subject } from "rxjs";
 import { OandaPrice } from "../types/oanda";
-import { resolve } from "path";
+import { OandaOrderFactory } from "./OANDA/OrderFactory";
 
 export default class OandaPortfolioManager {
   private streamingUrl: string = `https://stream-fxpractice.oanda.com/v3/accounts/${process.env.ACCOUNT_ID}/pricing/stream`;
@@ -10,6 +10,7 @@ export default class OandaPortfolioManager {
   private apiKey: string;
   private req: ClientRequest | null = null;
   private priceSubject: Subject<OandaPrice> = new Subject<OandaPrice>();
+  private orderFactory: OandaOrderFactory = new OandaOrderFactory();
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -75,51 +76,49 @@ export default class OandaPortfolioManager {
     });
   }
 
-  async placeOrder(): Promise<void> {
+  async placeMarketOrder(): Promise<void> {
+    const order = JSON.stringify(
+      this.orderFactory.createMarketOrder("EUR", "USD", 1)
+    );
     const options = {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         AcceptDatetimeFormat: "UNIX",
         AccountID: process.env.ACCOUNT_ID,
+        ContentType: "application/json",
       },
+      body: JSON.stringify(order),
     };
 
-    const body = JSON.stringify({
-      order: {
-        units: "100",
-        instrument: "EUR_USD",
-        timeInForce: "FOK",
-        type: "MARKET",
-        positionFill: "DEFAULT",
-      },
-    });
+    // build order request
+    return new Promise((resolve, reject) => {
+      const req = https.request(
+        `${this.baseUrl}/orders`,
+        {
+          method: "POST",
+          ...options,
+        },
+        (res) => {
+          // console.log(`STATUS: ${res.statusCode}`);
+          // console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
 
-    const req = https.request(
-      `${this.baseUrl}/orders`,
-      {
-        method: "POST",
-        ...options,
-      },
-      (res) => {
-        console.log(`STATUS: ${res.statusCode}`);
-        console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
-        res.on("data", (chunk) => {
-          console.log(`BODY: ${chunk}`);
-        });
-
-        if (res.statusCode === 201) {
-          console.log("Order placed successfully.");
-          resolve();
-        } else {
-          console.error(
-            `Failed to place order. Status code: ${res.statusCode}`
-          );
-          throw new Error(
-            `Failed to place order. Status code: ${res.statusCode}`
-          );
+          if (res.statusCode === 201) {
+            console.log("Order placed successfully.");
+            resolve();
+          } else {
+            console.error(
+              `Failed to place order. Status code: ${res.statusCode}`
+            );
+            reject(
+              new Error(`Failed to place order. Status code: ${res.statusCode}`)
+            );
+          }
         }
-      }
-    );
+      );
+
+      req.write(options.body);
+      req.end();
+    });
   }
 
   async cancelOrder(): Promise<void> {

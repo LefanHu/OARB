@@ -15,10 +15,23 @@ export interface OandaPrice {
   instrument: string;
 }
 
-export interface Order {
-  units: string;
-  instrument: string;
-  timeInForce: string;
-  type: string;
-  positionFill: string;
+export interface MarketOrder {
+  order: {
+    units: string;
+    instrument: string;
+    timeInForce: string;
+    type: string;
+    positionFill: string;
+  };
+}
+
+export interface LimitOrder {
+  order: {
+    units: string;
+    instrument: string;
+    price: string;
+    timeInForce: string;
+    type: string;
+    positionFill: string;
+  };
 }
